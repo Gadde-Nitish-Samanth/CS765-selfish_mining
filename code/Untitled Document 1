@@ -1,0 +1,7 @@
+lead, public_mining_blk, mining_blk
+
+cases:
+1. state 0 - mining_blk and public_mining_blk to this
+2. state 1 - release private block,lead=0,public_mining_blk to this
+3. state 0` - 
+4. fork, >2 private blocks, public block - release private block,
