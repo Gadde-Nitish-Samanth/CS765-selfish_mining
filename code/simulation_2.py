@@ -8,7 +8,7 @@ from datetime import datetime
 
 #input---------------------------------------------------------------------------------------------------------
 n = int(input("Enter the number of nodes(n): "))
-z = int(input("Enter the percent of slow nodes(z): "))
+z = 50
 T_tx = int(input("Enter the mean interarrival time of transactions(T_tx): "))
 percent_high_cpu = int(input("Enter the percent of High CPU nodes(percent_high_cpu): "))
 B_Tx = int(input("Enter block interarrival time(B_Tx)(in sec): "))
