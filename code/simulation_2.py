@@ -3,15 +3,18 @@ import simpy
 from networkgen import *
 from models import *
 from datetime import datetime
+import math
 
 # used the libraries simpy(for simulation) and numpy
 
 #input---------------------------------------------------------------------------------------------------------
-n = int(input("Enter the number of nodes(n): "))
 z = 50
+percent_high_cpu = 30
+n = int(input("Enter the number of nodes(n): "))
 T_tx = int(input("Enter the mean interarrival time of transactions(T_tx): "))
-percent_high_cpu = int(input("Enter the percent of High CPU nodes(percent_high_cpu): "))
 B_Tx = int(input("Enter block interarrival time(B_Tx)(in sec): "))
+gamma = int(input("Enter the percent of honest nodes adversary is connected to(r): "))
+adv_mining_power = int(input("Enter the percent of mining power adversary has(alpha): "))
 
 # Setup--------------------------------------------------------------------------------------------------------
 
@@ -49,10 +52,17 @@ for i in node_list:
 	if i.speed ==1:
 		i.selfish=1
 		selfish_node=i.id
+		total_hash_power = total_hash_power-i.hash_power
+		# print(total_hash_power)
+		total_hash_power = (100*total_hash_power)/(100-adv_mining_power)
+		# print(total_hash_power)
+		i.hash_power = total_hash_power*adv_mining_power/100
+		# print(i.hash_power)
 		break
 
 #network generation
-adj = networkgen(n,2,weights)
+min_connect = math.ceil(gamma*n/100) 
+adj = networkgen(n,min_connect,weights)
 for i in range(n):
 	for j in range(i+1):
 		if(adj[i][j]==1):
@@ -391,6 +401,51 @@ for node in node_list:
 	file.close()
 
 #extras--------------------------------------------------------------------------------------------------------
+
+# # printing selfish nodes
+print(selfish_node)
+
+# ratios for assignment 2
+# looping in main chain
+itr_block = node_list[selfish_node].mining_blk
+adv_num_blks_main_chain = 0
+while (itr_block.blk_id!='gen'):
+	temp = itr_block.blk_id.split('_')
+	node = temp[0]
+	node = int(node[1:])
+	if node==selfish_node:
+		adv_num_blks_main_chain=adv_num_blks_main_chain+1
+	itr_block= itr_block.parent_ptr
+
+# looping in whole blockchain
+itr_block = node_list[selfish_node].genesis_blk
+total_adv_blks = 0
+total_blocks = 0
+
+# num=0
+def get_values(blk):
+	if blk.blk_id!='gen':
+		global total_adv_blks
+		global total_blocks
+		total_blocks = total_blocks+1
+		temp = blk.blk_id.split('_')
+		node = temp[0]
+		node = int(node[1:])
+		# print(node)
+		# print(selfish_node)
+		if node==selfish_node:
+			total_adv_blks = total_adv_blks+1
+	for cld in blk.child_ptr_list:
+		get_values(cld)
+
+get_values(itr_block)
+
+# printing ratios
+
+print("MPU_node_adv: %f" %(adv_num_blks_main_chain/total_adv_blks))
+print("MPU_node_overall: %f" %(node_list[selfish_node].mining_blk.level/total_blocks))
+
+
 ## ratio for blocks
 
 # def get_num_blks(blk):
@@ -432,8 +487,8 @@ for node in node_list:
 # 			sum4=sum4+num[i]/node_list[i].blk_cnt
 # print(sum1/num1,sum2/num2,sum3/num3,sum4/num4)
 
-# printing selfish nodes
-print(selfish_node)
+# # printing selfish nodes
+# print(selfish_node)
 
 # printing info for visualization
 num=0
